@@ -187,17 +187,24 @@
                     // change in time in seconds
                     dtx = (now - autoScroll.prevTimeX) / 1000,
                     dty = (now - autoScroll.prevTimeY) / 1000,
-                    vx, vy, sx, sy;
+                    vx, vy, sx, sy, factorRect;
 
                 // displacement
                 if (options.velocity) {
                   vx = options.velocity.x;
                   vy = options.velocity.y;
                 }
+                else if (options.factor){
+                  factorRect = getElementClientRect(isWindow(container) ? document.documentElement : container);
+
+                  // factor of container width and height
+                  vx = options.factor.x * factorRect.width;
+                  vy = options.factor.y * factorRect.height;
+                }
                 else {
                   vx = vy = options.speed
                 }
- 
+
                 sx = vx * dtx;
                 sy = vy * dty;
 
