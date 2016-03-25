@@ -181,13 +181,14 @@
 
             // scroll the window by the values in scroll.x/y
             scroll: function () {
-                var options = autoScroll.interaction.target.options[autoScroll.interaction.prepared.name].autoScroll,
+                var interaction = autoScroll.interaction,
+                    options = interaction.target.options[autoScroll.interaction.prepared.name].autoScroll,
                     container = options.container || getWindow(autoScroll.interaction.element),
                     now = new Date().getTime(),
                     // change in time in seconds
                     dtx = (now - autoScroll.prevTimeX) / 1000,
                     dty = (now - autoScroll.prevTimeY) / 1000,
-                    vx, vy, sx, sy, factorRect;
+                    vx, vy, sx, sy, rx, ry, factorRect, newEvent;
 
                 // displacement
                 if (options.velocity) {
@@ -208,22 +209,41 @@
                 sx = vx * dtx;
                 sy = vy * dty;
 
+                rx = autoScroll.x * sx;
+                ry = autoScroll.y * sy;
+
                 if (sx >= 1 || sy >= 1) {
                     if (isWindow(container)) {
-                        container.scrollBy(autoScroll.x * sx, autoScroll.y * sy);
+                      container.scrollBy(rx, ry);
                     }
                     else if (container) {
-                        container.scrollLeft += autoScroll.x * sx;
-                        container.scrollTop  += autoScroll.y * sy;
+                      container.scrollLeft += rx;
+                      container.scrollTop  += ry;
                     }
 
-                    if (sx >=1) autoScroll.prevTimeX = now;
+                    if (sx >= 1) autoScroll.prevTimeX = now;
                     if (sy >= 1) autoScroll.prevTimeY = now;
                 }
 
+                // dispatch move
+                if (options.moveOnScroll){
+                  if (rx != 0 || ry != 0){
+                    // create a new event using the previous client and screen coordinates
+                    // the page coordinates will be different because of the scroll
+                    newEvent = document.createEvent('MouseEvents');
+                    newEvent.initMouseEvent('mousemove', true, true, window, -20,
+                                            autoScroll.screenX, autoScroll.screenY,
+                                            autoScroll.clientX, autoScroll.clientY,
+                                            autoScroll.ctrlKey, autoScroll.altKey, autoScroll.shiftKey,
+                                            autoScroll.metaKey, autoScroll.button, autoScroll.relatedTarget);
+
+                    interaction._eventTarget.dispatchEvent(newEvent);
+                  }
+                }
+
                 if (autoScroll.isScrolling) {
-                    cancelFrame(autoScroll.i);
-                    autoScroll.i = reqFrame(autoScroll.scroll);
+                  cancelFrame(autoScroll.i);
+                  autoScroll.i = reqFrame(autoScroll.scroll);
                 }
             },
 
@@ -3207,6 +3227,19 @@
 
             autoScroll.x = (right ? 1: left? -1: 0);
             autoScroll.y = (bottom? 1:  top? -1: 0);
+
+            if (options.moveOnScroll) {
+                autoScroll.clientX  = pointer.clientX;
+                autoScroll.clientY  = pointer.clientY;
+                autoScroll.screenX  = pointer.screenX;
+                autoScroll.screenY  = pointer.screenY;
+                autoScroll.ctrlKey  = pointer.ctrlKey;
+                autoScroll.altKey   = pointer.altKey;
+                autoScroll.shiftKey = pointer.shiftKey;
+                autoScroll.metaKey  = pointer.metaKey;
+                autoScroll.button   = pointer.button;
+                autoScroll.relatedTarget = pointer.relatedTarget;
+            }
 
             if (!autoScroll.isScrolling) {
                 // set the autoScroll properties to those of the target
