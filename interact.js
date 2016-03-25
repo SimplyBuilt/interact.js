@@ -201,6 +201,12 @@
                   // factor of container width and height
                   vx = options.factor.x * factorRect.width;
                   vy = options.factor.y * factorRect.height;
+
+                  if (options.factor.xMin) vx = Math.max(options.factor.xMin, vx);
+                  if (options.factor.xMax) vx = Math.min(options.factor.xMax, vx);
+
+                  if (options.factor.yMin) vy = Math.max(options.factor.yMin, vy);
+                  if (options.factor.yMax) vy = Math.min(options.factor.yMax, vy);
                 }
                 else {
                   vx = vy = options.speed
@@ -213,16 +219,16 @@
                 ry = autoScroll.y * sy;
 
                 if (sx >= 1 || sy >= 1) {
-                    if (isWindow(container)) {
-                      container.scrollBy(rx, ry);
-                    }
-                    else if (container) {
-                      container.scrollLeft += rx;
-                      container.scrollTop  += ry;
-                    }
+                  if (isWindow(container)) {
+                    container.scrollBy(rx, ry);
+                  }
+                  else if (container) {
+                    container.scrollLeft += rx;
+                    container.scrollTop  += ry;
+                  }
 
-                    if (sx >= 1) autoScroll.prevTimeX = now;
-                    if (sy >= 1) autoScroll.prevTimeY = now;
+                  if (sx >= 1) autoScroll.prevTimeX = now;
+                  if (sy >= 1) autoScroll.prevTimeY = now;
                 }
 
                 // dispatch move
